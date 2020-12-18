@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>shardingsphere之mysql数据迁移优化</title>
+    <link href="/2020/12/04/shardingsphere-sacling-mysql-speed-increase/"/>
+    <url>/2020/12/04/shardingsphere-sacling-mysql-speed-increase/</url>
+    
+    <content type="html"><![CDATA[<p>水平分库项目，用了ShardingSphere-scaling做数据迁移，由于存量数据迁移过程中过于缓慢，对数据迁移模块进行优化。</p><p>迁移效率提升600%，校验效率提升6000%。</p><table><thead><tr><th>表名</th><th>数据</th><th>迁移耗时</th><th>校验耗时</th></tr></thead><tbody><tr><td>screen_case</td><td>16000w</td><td>12h（优化前）</td><td></td></tr><tr><td>dc_rule_random</td><td>7000w</td><td>1h</td><td>8h（优化前）</td></tr><tr><td>ap_apply</td><td>14000w</td><td>2h</td><td>14m</td></tr><tr><td>ap_apply_ext</td><td>17000w</td><td>4h2m</td><td>18m</td></tr></tbody></table><h2 id="批量插入"><a href="#批量插入" class="headerlink" title="批量插入"></a>批量插入</h2><p><code>rewriteBatchedStatements=true</code></p><p>改写存量数据为批量插入，代码如下：</p><pre><code class="hljs java"><span class="hljs-keyword">try</span> (Connection connection = dataSource.getConnection()) &#123;    connection.setAutoCommit(<span class="hljs-keyword">false</span>);    <span class="hljs-keyword">try</span> (PreparedStatement ps = connection.prepareStatement(insertSql)) &#123;        ps.setQueryTimeout(<span class="hljs-number">60</span>);        <span class="hljs-keyword">for</span> (DataRecord record : list) &#123;            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; record.getColumnCount(); i++) &#123;                ps.setObject(i + <span class="hljs-number">1</span>, record.getColumn(i).getValue());            &#125;            ps.addBatch();        &#125;        ps.executeBatch();    &#125;    connection.commit();&#125;</code></pre><p>当时以为这样写就可以了，但是迁移速度还是很慢只比原来单条插入快了一倍左右，经过研究发现，这并不是真正的批量插入，只是多条插入一次事务，降低了事务开销。</p><pre><code class="hljs mysql">INSERT IGNORE INTO &#96;user&#96;(&#96;id&#96;,&#96;cust_no&#96;,&#96;age&#96;,&#96;name&#96;,&#96;delete_at&#96;) VALUES(59985,&#39;UR59985&#39;,98,&#39;name:1605538600723&#39;,0) ;INSERT IGNORE INTO &#96;user&#96;(&#96;id&#96;,&#96;cust_no&#96;,&#96;age&#96;,&#96;name&#96;,&#96;delete_at&#96;) VALUES(59986,&#39;UR59986&#39;,23,&#39;name:160512312311&#39;,0) ;</code></pre><p>在 MySQL JDBC 中，批操作的提交默认是逐条进行的。而在链接中加入以下参数，会把多条语句合并成一条提交。当 SQL 语句累积到一定数量（由数据库可接受的最大数据包大小决定），再一次性提交到数据库，减少了与数据库的交互次数，大大提高了效率。<code>rewriteBatchedStatements=true</code></p><pre><code class="hljs mysql">INSERT IGNORE INTO &#96;user&#96;(&#96;id&#96;,&#96;cust_no&#96;,&#96;age&#96;,&#96;name&#96;,&#96;delete_at&#96;) VALUES(50200,&#39;UR50200&#39;,98,&#39;name:1606138884516&#39;,0),(50202,&#39;UR50202&#39;,98,&#39;name:1606138884516&#39;,0),(50204,&#39;UR50204&#39;,98,&#39;name:1606138884516&#39;,0);</code></pre><p>分析源码可以发现：<br>当mysql版本&gt;4.1.1，并且rewriteBatchedStatements=true，批操作语句总数大于 4 条时（nbrCommands &gt; 4），才会合并成一条语句提交。</p><pre><code class="hljs java">com.mysql.jdbc.StatementImpl#executeBatchInternal  <span class="hljs-keyword">protected</span> <span class="hljs-keyword">long</span>[] executeBatchInternal() <span class="hljs-keyword">throws</span> SQLException &#123;...nbrCommands = (<span class="hljs-keyword">long</span>[])<span class="hljs-keyword">this</span>.batchedArgs.size();<span class="hljs-comment">// 获取批操作语句数量</span>    <span class="hljs-keyword">this</span>.batchedGeneratedKeys = <span class="hljs-keyword">new</span> ArrayList(<span class="hljs-keyword">this</span>.batchedArgs.size());    <span class="hljs-keyword">boolean</span> multiQueriesEnabled = locallyScopedConn.getAllowMultiQueries();<span class="hljs-comment">// 当前连接是否允许一次查询多条语句，默认为 false</span>    Object sqlEx;<span class="hljs-keyword">if</span> (locallyScopedConn.versionMeetsMinimum(<span class="hljs-number">4</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>) &amp;&amp; (multiQueriesEnabled || locallyScopedConn.getRewriteBatchedStatements() &amp;&amp; nbrCommands &gt; <span class="hljs-number">4</span>)) &#123;sqlEx = <span class="hljs-keyword">this</span>.executeBatchUsingMultiQueries(multiQueriesEnabled, (<span class="hljs-keyword">int</span>)nbrCommands, individualStatementTimeout);    <span class="hljs-keyword">return</span> (<span class="hljs-keyword">long</span>[])sqlEx;    &#125;    ...&#125;</code></pre><h2 id="预编译设置"><a href="#预编译设置" class="headerlink" title="预编译设置"></a>预编译设置</h2><p> jdbc客户端参数：</p><p>  cachePrepStmts：默认false.是否缓存prepareStatement对象。每个连接都有一个缓存，是以sql为唯一标识的LRU cache. 同一连接下，不同stmt可以不用重新创建prepareStatement对象。</p><p>  prepStmtCacheSize：LRU cache中prepareStatement对象的个数。一般设置为最常用sql的个数。</p><p>  prepStmtCacheSqlLimit：prepareStatement对象的大小。超出大小不缓存。</p><h2 id="服务端编译"><a href="#服务端编译" class="headerlink" title="服务端编译"></a>服务端编译</h2><p>useServerPrepStmts=false 关闭服务器端编译，sql语句在客户端编译好再发送给服务器端。</p><p>如果为true,sql会采用占位符方式发送到服务器端，在服务器端再组装sql语句。</p><p>占位符方式：<code>INSERT INTO t (c1,c2) VALUES (？,？),(？,？),(？,？);</code></p><p>此方式就会产生一个问题，当列数*提交记录数&gt;65535</p><p>时就会报错：Prepared statement contains too many placeholders,</p><p>这是由于我把“提交记录数量”设为10000，而要插入记录的表字段有30个，所以要进行批量插入时需要30*10000=300000  &gt; 65535 ，故而报错。</p><p><strong>解决方案</strong></p><p><strong>方案1：</strong>把DB连接中的 rewriteBatchedStatements 给设置为false（或者去掉），不过这个操作会影响数据的插入速度。</p><p><strong>方案2：</strong>更改表输出的设计。确保30个输出字段的和提交记录数量的乘积不超过65535。比如把提交记录数量由10000更改为450（30*2000=60000&lt; 65535）</p><p>当然我们的目的是为了提高数据库写速度，并且不考虑sql注入问题，所以当<code>rewriteBatchedStatements =true</code>时<code>useServerPrepStmts=false</code>配合使用较为合适。</p><h2 id="压缩数据传输"><a href="#压缩数据传输" class="headerlink" title="压缩数据传输"></a>压缩数据传输</h2><p><code>useCompression=true</code>压缩数据传输，优化客户端和MySQL服务器之间的通信性能。</p><pre><code class="hljs java">com.mysql.jdbc.MysqlIO#doHandshake<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">doHandshake</span><span class="hljs-params">(String user, String password, String database)</span> <span class="hljs-keyword">throws</span> SQLException </span>&#123; ···          <span class="hljs-comment">//</span>    <span class="hljs-comment">// Can&#x27;t enable compression until after handshake 在握手后</span>    才能启用压缩    <span class="hljs-comment">//</span>    <span class="hljs-keyword">if</span> (((<span class="hljs-keyword">this</span>.serverCapabilities &amp; CLIENT_COMPRESS) != <span class="hljs-number">0</span>) &amp;&amp; <span class="hljs-keyword">this</span>.connection.getUseCompression() &amp;&amp; !(<span class="hljs-keyword">this</span>.mysqlInput <span class="hljs-keyword">instanceof</span> CompressedInputStream)) &#123;        <span class="hljs-comment">// The following matches with ZLIB&#x27;s compress()</span>        <span class="hljs-keyword">this</span>.deflater = <span class="hljs-keyword">new</span> Deflater();        <span class="hljs-keyword">this</span>.useCompression = <span class="hljs-keyword">true</span>;        <span class="hljs-keyword">this</span>.mysqlInput = <span class="hljs-keyword">new</span> CompressedInputStream(<span class="hljs-keyword">this</span>.connection, <span class="hljs-keyword">this</span>.mysqlInput);    &#125;···&#125;</code></pre><p><a href="https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_have_compress">https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_have_compress</a></p><p><img src="/images/shardingsphere-sacling-mysql-speed-increase/image-20201124001333217.png" alt="image-20201124001333217"></p><p>压缩协议提升网络传输性能，对于一些网络环境较差的用户会有很大的帮助，但是会相应地增加CPU开销，适用于传输数据量很大带宽不高的情况，这是一个CPU和网络资源的平衡问题。</p><p>经过测试 直连数据库会速度提高 5% 左右，效果不明显。通过shardingsphere-proxy连接数据库速度也并无明显提升</p><p>因此目前带宽无瓶颈的情况下，未使用压缩协议</p><p>直连数据库批量插入5分钟：</p><table><thead><tr><th>useCompression</th><th>100条avg</th><th>1000条avg</th><th>10000条avg</th></tr></thead><tbody><tr><td>true</td><td>11ms</td><td>42ms</td><td>307ms</td></tr><tr><td>false</td><td>12ms</td><td>43ms</td><td>321ms</td></tr></tbody></table><p>通过shardingsphere-proxy连接数据库批量插入5分钟：</p><table><thead><tr><th>useCompression</th><th>100条avg</th><th>1000条avg</th><th>10000条avg</th></tr></thead><tbody><tr><td>true</td><td>31ms</td><td>101ms</td><td>725ms</td></tr><tr><td>false</td><td>32ms</td><td>100ms</td><td>732ms</td></tr></tbody></table><p><strong>适用场景</strong></p><p>MySQL 压缩协议适合的场景是 MySQL 的服务器端和客户端之间传输的数据量很大，或者可用带宽不高的情况，典型的场景有如下两个：</p><p>a、查询大量的数据，带宽不够（比如导出数据的时候）；</p><p>b、复制的时候 binlog 量太大，启用 slave_compressed_protocol 参数进行日志压缩复制。</p><h3 id="压缩协议简介"><a href="#压缩协议简介" class="headerlink" title="压缩协议简介"></a>压缩协议简介</h3><p>压缩协议是 MySQL 通信协议的一部分，要启用压缩协议进行数据传输，需要 MySQL 服务器端和客户端都支持 zlib 算法。启动压缩协议会导致 CPU 负载略微上升。使用启用压缩协议使用-C 参数或者 –compress=true 参数启动客户端的压缩功能。如果启用了-C 或者 compress=true 选项，那么在连接到服务器段的时候，会发送 0x0020（CLIENT_COMPRESS）的服务器权能标志位，和服务器端协商通过后（3 次握手以后），就支持压缩协议了。由于采用压缩，数据包的格式会发生变化，具体的变化如下：</p><p>未压缩的数据包格式：</p><p><img src="/images/shardingsphere-sacling-mysql-speed-increase/1497240545250_627_1497240545431.png" alt="img"></p><p>压缩后的数据包格式：</p><p><img src="/images/shardingsphere-sacling-mysql-speed-increase/1497240560529_3423_1497240560716.png" alt="img"></p><p>大家可能留意到压缩后的数据报格式有压缩和未压缩之分，这个是 MySQL 为了较少 CPU 开销而做的一个优化。如果内容小于 50 个字节的时候，就不对内容进行压缩，而大于 50 字节的时候，才会启用压缩功能。具体的规则如下：</p><p>当第三个字段的值等于 0x00 的时候，表示当前包没有压缩，因此 n<code>*</code>byte 的内容为 1<code>*</code>byte,n<code>*</code>byte，即请求类型和请求内容。</p><p>当第三个字段的值大于 0x00 的时候，表示当前包已采用 zlib 压缩，因此使用的时候需要对 n<code>*</code>byte 进行解压，解压后内容为 1<code>*</code>byte,n<code>*</code>byte，即请求类型和请求内容。</p><h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p><strong>原库读取数据设置</strong></p><p><code>useServerPrepStmts=true</code><br><code>cachePrepStmts=true</code></p><p><strong>新库插入数据设置</strong></p><p><code>rewriteBatchedStatements=true </code><br><code>useServerPrepStmts=false </code><br><code>useCompression=false</code></p><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://my.oschina.net/u/4418437/blog/3648369">https://my.oschina.net/u/4418437/blog/3648369</a><br><a href="https://cloud.tencent.com/developer/article/1005252">https://cloud.tencent.com/developer/article/1005252</a><br><a href="https://www.cnblogs.com/lispking/p/3604063.html">https://www.cnblogs.com/lispking/p/3604063.html</a><br><a href="https://stackoverflow.com/questions/2506460/when-should-i-use-mysql-compressed-protocol">https://stackoverflow.com/questions/2506460/when-should-i-use-mysql-compressed-protocol</a><br><a href="https://blog.csdn.net/qq_43153418/article/details/104002252">https://blog.csdn.net/qq_43153418/article/details/104002252</a><br><a href="https://www.cnblogs.com/justfortaste/p/3920140.html">https://www.cnblogs.com/justfortaste/p/3920140.html</a></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>shardingsphere</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>shardingsphere</tag>
+      
+      <tag>mysql</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>AOP遇到的问题</title>
+    <link href="/2020/10/29/AOP%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/"/>
+    <url>/2020/10/29/AOP%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/</url>
+    
+    <content type="html"><![CDATA[<p>test1</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>JAVA</tag>
+      
+      <tag>AOP</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Hello World</title>
+    <link href="/2020/10/01/hello-world/"/>
+    <url>/2020/10/01/hello-world/</url>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span></code></pre><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><pre><code class="hljs bash">$ hexo server</code></pre><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><pre><code class="hljs bash">$ hexo generate</code></pre><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><pre><code class="hljs bash">$ hexo deploy</code></pre><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  
+</search>
