@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>netty-start</title>
+    <link href="/2020/12/18/netty-start/"/>
+    <url>/2020/12/18/netty-start/</url>
+    
+    <content type="html"><![CDATA[<p>Netty 是一款异步的事件驱动的网络应用程序框架，支持快速地开发可维护的高性能的面向协议的服务器</p><p>和客户端。</p><p><img src="/images/netty-start/image-20201218173515498.png" alt="image-20201218173515498"></p><p>FTP</p><p>SMTP</p><p>HTTP</p><p>WebSocket</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>netty</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>netty</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>shardingsphere之mysql数据迁移优化</title>
     <link href="/2020/12/04/shardingsphere-sacling-mysql-speed-increase/"/>
     <url>/2020/12/04/shardingsphere-sacling-mysql-speed-increase/</url>
@@ -35,7 +60,7 @@
     <link href="/2020/10/29/AOP%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/"/>
     <url>/2020/10/29/AOP%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/</url>
     
-    <content type="html"><![CDATA[<p>test11</p>]]></content>
+    <content type="html"><![CDATA[<p>test1</p>]]></content>
     
     
     
