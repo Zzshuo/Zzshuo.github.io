@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="zshuo">
   <meta name="keywords" content="">
-  <title>shardingsphere之scaling - zshuo</title>
+  <title>Mac安装derby及Tomact JNDI引入数据源 - zshuo</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 
@@ -162,7 +162,7 @@
 </nav>
 
     <div class="banner intro-2" id="background" parallax=true
-         style="background: url('/images/common/banner_post.jpg') no-repeat center center;
+         style="background: url('/images/general/2.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
@@ -177,8 +177,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-01-05 17:06" pubdate>
-        2021年1月5日 下午
+      <time datetime="2021-03-03 00:00" pubdate>
+        2021年3月3日 凌晨
       </time>
     </span>
   
@@ -189,7 +189,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1k 字
+      975 字
     </span>
   
 
@@ -199,7 +199,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      11
+      16
        分钟
     </span>
   
@@ -237,92 +237,146 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto" id="post">
             <!-- SEO header -->
-            <h1 style="display: none">shardingsphere之scaling</h1>
+            <h1 style="display: none">Mac安装derby及Tomact JNDI引入数据源</h1>
             
             <div class="markdown-body" id="post-body">
-              <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>ShardingSphere-Scaling 是一个提供给用户的通用的 ShardingSphere 数据接入迁移，及弹性伸缩的解决方案。</p>
-<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>目前的弹性伸缩解决方案为：临时地使用两个数据库集群，伸缩完成后切换的方式实现。</p>
-<p><img src="/images/shardingsphere-scaling-introduce/scaling-principle-overview.cn.png" srcset="/img/loading.gif" alt="伸缩总揽"></p>
-<p>这种实现方式有以下优点：</p>
-<ol>
-<li>伸缩过程中，原始数据没有任何影响</li>
-<li>伸缩失败无风险</li>
-<li>不受分片策略限制</li>
-</ol>
-<p>同时也存在一定的缺点：</p>
-<ol>
-<li>在一定时间内存在冗余服务器</li>
-<li>所有数据都需要移动</li>
-</ol>
-<h2 id="执行步骤"><a href="#执行步骤" class="headerlink" title="执行步骤"></a>执行步骤</h2><p><img src="/images/shardingsphere-scaling-introduce/image-20201216161515781.png" srcset="/img/loading.gif" alt="image-20201216161515781"></p>
-<h3 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a>准备阶段</h3><p>在准备阶段，弹性伸缩模块会进行数据源连通性及权限的校验，同时进行存量数据的统计、日志位点的记录，最后根据数据量和用户设置的并行度，对任务进行分片。</p>
-<h3 id="存量数据迁移阶段"><a href="#存量数据迁移阶段" class="headerlink" title="存量数据迁移阶段"></a>存量数据迁移阶段</h3><p>执行在准备阶段拆分好的存量数据迁移作业，存量迁移阶段采用 JDBC 查询的方式，直接从数据节点中读取数据，并使用新规则写入到新集群中。</p>
-<h3 id="增量数据同步阶段"><a href="#增量数据同步阶段" class="headerlink" title="增量数据同步阶段"></a>增量数据同步阶段</h3><p>由于存量数据迁移耗费的时间受到数据量和并行度等因素影响，此时需要对这段时间内业务新增的数据进行同步。 不同的数据库使用的技术细节不同，但总体上均为基于复制协议或 WAL 日志实现的变更数据捕获功能。</p>
-<ul>
-<li>MySQL：订阅并解析 binlog</li>
-<li>PostgreSQL：采用官方逻辑复制 <a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/9.4/test-decoding.html">test_decoding</a></li>
-</ul>
-<p>这些捕获的增量数据，同样会由弹性伸缩模块根据新规则写入到新数据节点中。当增量数据基本同步完成时（由于业务系统未停止，增量数据是不断的），则进入规则切换阶段。</p>
-<h3 id="规则切换阶段"><a href="#规则切换阶段" class="headerlink" title="规则切换阶段"></a>规则切换阶段</h3><p>在此阶段，可能存在一定时间的业务只读窗口期，通过业务停止写入或设置数据库只读或ShardingSphere的熔断机制，让旧数据节点中的数据短暂静态，确保增量同步已完全完成。</p>
-<p>这个窗口期时间短则数秒，长则数分钟，取决于数据量和用户是否需要对数据进行强校验。 确认完成后，Apache ShardingSphere 可通过配置中心修改配置，将业务导向新规则的集群，弹性伸缩完成。</p>
-<p>我们由于有写业务无法无法完全停止写入，目前只能尽可能减少写入，然后开启双写，并且停止迁移，进行数据校验，对有问题数据进行补处理。</p>
-<h2 id="架构设计"><a href="#架构设计" class="headerlink" title="架构设计"></a>架构设计</h2><h3 id="ScalingTask"><a href="#ScalingTask" class="headerlink" title="ScalingTask"></a>ScalingTask</h3><p>任务最小执行单元</p>
-<p>主要实现类：</p>
-<ul>
-<li>InventoryDataScalingTask（History）存量</li>
-<li>IncrementalDataScalingTask（RealTime） 增量</li>
-</ul>
-<h3 id="Dumper（Reader）"><a href="#Dumper（Reader）" class="headerlink" title="Dumper（Reader）"></a>Dumper（Reader）</h3><p>从原库获取数据，核心操作主要有：</p>
-<ul>
-<li>setChannel(Channel channel); 设置Channel</li>
-<li>dump(); 从原库获取数据，并保存数据到channel中</li>
-</ul>
-<p>主要实现类：</p>
-<ul>
-<li>JDBCDumper</li>
-<li>LogDumper</li>
-</ul>
-<h3 id="Importer（Writer）"><a href="#Importer（Writer）" class="headerlink" title="Importer（Writer）"></a>Importer（Writer）</h3><p>把数据写入数据到新库,核心操作主要有：</p>
-<ul>
-<li>setChannel(Channel channel); 设置Channel</li>
-<li>write(); 写入数据到数据库</li>
-</ul>
-<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><div class="hljs"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">Channel</span> </span>&#123;
-    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">pushRecord</span><span class="hljs-params">(Record dataRecord)</span> <span class="hljs-keyword">throws</span> InterruptedException</span>;
-    <span class="hljs-function">List&lt;Record&gt; <span class="hljs-title">fetchRecords</span><span class="hljs-params">(<span class="hljs-keyword">int</span> batchSize, <span class="hljs-keyword">int</span> timeout)</span></span>;
-    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ack</span><span class="hljs-params">()</span></span>;
-    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">close</span><span class="hljs-params">()</span></span>;
-&#125;
-</code></pre></div>
+              <h3 id="安装derby"><a href="#安装derby" class="headerlink" title="安装derby"></a>安装derby</h3><ol>
+<li><p>下载对应版本derby</p>
+<p><a target="_blank" rel="noopener" href="http://db.apache.org/derby/derby_downloads.html">http://db.apache.org/derby/derby_downloads.html</a></p>
+</li>
+<li><p>解压到指定目录</p>
+<blockquote>
+<p>/Library/Java/db-derby-10.13.1.1-bin</p>
+</blockquote>
+</li>
+<li><p>配置环境变量</p>
+<div class="hljs"><pre><code class="hljs sh">vim ~/.bash_profile</code></pre></div>
 
-<p>主要实现类：</p>
-<ul>
-<li>MemoryChannel</li>
-<li>DistributionChannel</li>
-</ul>
-<h3 id="存量迁移"><a href="#存量迁移" class="headerlink" title="存量迁移"></a>存量迁移</h3><p><img src="/images/shardingsphere-scaling-introduce/image-20201216175534892.png" srcset="/img/loading.gif" alt="image-20201216175534892"></p>
-<ol>
-<li><p>获取minId、maxId，并根据id和concurrency 把迁移id区间平均分配到各个Task（InventoryDataScalingTask）。</p>
-<p>minId=1，maxId=100，concurrency=10，则</p>
-<p>task1 id区间为 1-10，task2 id区间为 11-20 ……</p>
+<div class="hljs"><pre><code class="hljs shell">export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_231.jdk/Contents/Home
+export DERBY_HOME=/Library/Java/db-derby-10.13.1.1-bin
+export PATH=$PATH:$JAVA_HOME/bin:$DERBY_HOME:.
+export CLASSPATH=$DERBY_HOME/lib/derby.jar:$DERBY_HOME/lib/derbyclient.jar:$DERBY_HOME/lib/derbytools.jar:.</code></pre></div>
+
+<div class="hljs"><pre><code class="hljs shell">source  ~/.bash_profile</code></pre></div>
 </li>
-<li><p>每个Task都有一个dumper 从原库批量获取DataRecord，并push到MemoryChannel，BlockingQueue长度为10000，超过则阻塞等待</p>
+<li><p>查看derby信息</p>
+<div class="hljs"><pre><code class="hljs shell">➜  ~ java org.apache.derby.tools.sysinfo
+------------------ Java 信息 ------------------
+Java 版本：        1.8.0_231
+Java 供应商：      Oracle Corporation
+Java 主目录：      /Library/Java/JavaVirtualMachines/jdk1.8.0_231.jdk/Contents/Home/jre
+Java 类路径：      /Library/Java/db-derby-10.13.1.1-bin/lib/derby.jar:/Library/Java/db-derby-10.13.1.1-bin/lib/derbyclient.jar:/Library/Java/db-derby-10.13.1.1-bin/lib/derbytools.jar:.
+OS 名：            Mac OS X
+OS 体系结构：      x86_64
+OS 版本：          10.15.5
+Java 用户名：      zhengshuo
+Java 用户主目录：/Users/zhengshuo
+Java 用户目录：    /Users/zhengshuo
+java.specification.name: Java Platform API Specification
+java.specification.version: 1.8
+java.runtime.version: 1.8.0_231-b11
+--------- Derby 信息 --------
+[/Library/Java/db-derby-10.13.1.1-bin/lib/derby.jar] 10.13.1.1 - (1765088)
+[/Library/Java/db-derby-10.13.1.1-bin/lib/derbytools.jar] 10.13.1.1 - (1765088)
+[/Library/Java/db-derby-10.13.1.1-bin/lib/derbyclient.jar] 10.13.1.1 - (1765088)
+------------------------------------------------------
+----------------- 区域设置信息 -----------------
+当前区域设置：  [中文/中国 [zh_CN]]
+找到支持的区域设置：[cs]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[de_DE]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[es]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[fr]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[hu]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[it]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[ja_JP]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[ko_KR]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[pl]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[pt_BR]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[ru]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[zh_CN]
+	 版本：10.13.1.1 - (1765088)
+找到支持的区域设置：[zh_TW]
+	 版本：10.13.1.1 - (1765088)
+------------------------------------------------------
+------------------------------------------------------</code></pre></div>
 </li>
-<li><p>Importer从MemoryChannel批量获取DataRecord并依次插入到新库中，然后ack()。</p>
+<li><p>启动ij环境，输入 </p>
+<div class="hljs"><pre><code class="hljs shell">➜  ~ java org.apache.derby.tools.ij
+ij 版本 10.13
+<span class="hljs-meta">ij&gt;</span></code></pre></div>
 </li>
-<li><p>当dumper获取不到数据时，则push一个FinishedRecord到MemoryChannel，dumper结束。</p>
-</li>
-<li><p>Importer获取到FinishedRecord时，Importer结束，Task执行完毕。</p>
+<li><p>启动Derby数据库服务器</p>
+<div class="hljs"><pre><code class="hljs shell">➜  ~ java -jar $DERBY_HOME/lib/derbyrun.jar server start
+Wed Mar 03 15:06:49 CST 2021 : 已使用基本服务器安全策略安装了 Security Manager。
+Wed Mar 03 15:06:50 CST 2021 : Apache Derby 网络服务器 - 10.13.1.1 - (1765088) 已启动并准备接受端口 1527 上的连接</code></pre></div>
+
+<p>Derby数据库和服务器配置成功。</p>
 </li>
 </ol>
-<h3 id="增量迁移"><a href="#增量迁移" class="headerlink" title="增量迁移"></a>增量迁移</h3><p><img src="/images/shardingsphere-scaling-introduce/image-20201216175621918.png" srcset="/img/loading.gif" alt="image-20201216175621918"></p>
-<ol>
-<li><p>每次Task（InventoryDataScalingTask）执行完成，callBack 检测是否所有Task（InventoryDataScalingTask）执行完成。都执行完成开启增量迁移Task（IncrementalDataScalingTask）。</p>
+<h3 id="Tomact-JNDI引入数据源"><a href="#Tomact-JNDI引入数据源" class="headerlink" title="Tomact JNDI引入数据源"></a>Tomact JNDI引入数据源</h3><ol>
+<li><p><code>webapp/META-INF</code>下配置<code>context.xml</code></p>
+<div class="hljs"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">Context</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">Resource</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;jdbc/UserPlatformDB&quot;</span></span>
+<span class="hljs-tag">              <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;javax.sql.DataSource&quot;</span> <span class="hljs-attr">auth</span>=<span class="hljs-string">&quot;Container&quot;</span></span>
+<span class="hljs-tag">              <span class="hljs-attr">description</span>=<span class="hljs-string">&quot;Derby database for User Platform&quot;</span></span>
+<span class="hljs-tag">              <span class="hljs-attr">maxActive</span>=<span class="hljs-string">&quot;100&quot;</span> <span class="hljs-attr">maxIdle</span>=<span class="hljs-string">&quot;30&quot;</span> <span class="hljs-attr">maxWait</span>=<span class="hljs-string">&quot;10000&quot;</span></span>
+<span class="hljs-tag">              <span class="hljs-attr">username</span>=<span class="hljs-string">&quot;root&quot;</span> <span class="hljs-attr">password</span>=<span class="hljs-string">&quot;root&quot;</span></span>
+<span class="hljs-tag">              <span class="hljs-attr">driverClassName</span>=<span class="hljs-string">&quot;org.apache.derby.jdbc.EmbeddedDriver&quot;</span></span>
+<span class="hljs-tag">              <span class="hljs-attr">url</span>=<span class="hljs-string">&quot;jdbc:derby:/data/derby/db/user-platform;create=true&quot;</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">Context</span>&gt;</span></code></pre></div>
 </li>
-<li><p>增量只有一个dumper 从迁移开始时记录的binlog位置subscribe数据，并根据hashcode和channelNumber取模push到Memorychannel。</p>
-<p>String index = Integer.toString(Math.abs(dataRecord.hashCode()) % channelNumber);</p>
+<li><p><code>web.xml</code> 引入，与第一步内容要一致</p>
+<div class="hljs"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">resource-ref</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">description</span>&gt;</span>DB Connection<span class="hljs-tag">&lt;/<span class="hljs-name">description</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">res-ref-name</span>&gt;</span>jdbc/UserPlatformDB<span class="hljs-tag">&lt;/<span class="hljs-name">res-ref-name</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">res-type</span>&gt;</span>javax.sql.DataSource<span class="hljs-tag">&lt;/<span class="hljs-name">res-type</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">res-auth</span>&gt;</span>Container<span class="hljs-tag">&lt;/<span class="hljs-name">res-auth</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">resource-ref</span>&gt;</span></code></pre></div>
 </li>
-<li><p>Importer从MemoryChannel批量获取DataRecord并依次插入/更新到新库中，然后ack()。</p>
+<li><p><code>pom.xml</code> 配置tomcat插件,<code>&lt;enableNaming&gt;true&lt;/enableNaming&gt;</code>一定要配置，否则jndi不起作用</p>
+<div class="hljs"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">build</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">plugins</span>&gt;</span>
+        <span class="hljs-comment">&lt;!-- Tomcat Maven 插件用于构建可执行 war --&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">plugin</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.apache.tomcat.maven<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>tomcat7-maven-plugin<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>2.1<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">executions</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">execution</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">id</span>&gt;</span>tomcat-run<span class="hljs-tag">&lt;/<span class="hljs-name">id</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">goals</span>&gt;</span>
+                        <span class="hljs-comment">&lt;!-- 最终打包成可执行的jar包 --&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">goal</span>&gt;</span>exec-war-only<span class="hljs-tag">&lt;/<span class="hljs-name">goal</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">goals</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">phase</span>&gt;</span>package<span class="hljs-tag">&lt;/<span class="hljs-name">phase</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+                        <span class="hljs-comment">&lt;!-- ServletContext 路径 --&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">path</span>&gt;</span>/<span class="hljs-tag">&lt;/<span class="hljs-name">path</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">enableNaming</span>&gt;</span>true<span class="hljs-tag">&lt;/<span class="hljs-name">enableNaming</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">execution</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">executions</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">plugin</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">plugins</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">build</span>&gt;</span></code></pre></div>
+</li>
+<li><p>java代码获取连接即可</p>
+<div class="hljs"><pre><code class="hljs java">Context context = <span class="hljs-keyword">new</span> InitialContext();
+DataSource source = (DataSource)context.lookup(<span class="hljs-string">&quot;java:comp/env/jdbc/UserPlatformDB&quot;</span>);
+<span class="hljs-keyword">this</span>.connection = source.getConnection();</code></pre></div>
+
 </li>
 </ol>
 
@@ -334,7 +388,7 @@
                   <div class="post-meta mr-3">
                     <i class="iconfont icon-category"></i>
                     
-                      <a class="hover-with-bg" href="/categories/shardingsphere/">shardingsphere</a>
+                      <a class="hover-with-bg" href="/categories/java-lessons/">java lessons</a>
                     
                   </div>
                 
@@ -342,7 +396,11 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/shardingsphere/">shardingsphere</a>
+                      <a class="hover-with-bg" href="/tags/derby/">derby</a>
+                    
+                      <a class="hover-with-bg" href="/tags/jndi/">jndi</a>
+                    
+                      <a class="hover-with-bg" href="/tags/tomcat/">tomcat</a>
                     
                   </div>
                 
@@ -355,18 +413,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/01/05/shardingsphere-introduce/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">shardingsphere介绍</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2020/12/18/netty-start/">
-                        <span class="hidden-mobile">netty-start</span>
+                      <a href="/2021/01/26/dubbo-tag-invoker-chain/">
+                        <span class="hidden-mobile">dubbo自定义标签路由调用链路</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -542,7 +594,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "shardingsphere之scaling&nbsp;",
+        "Mac安装derby及Tomact JNDI引入数据源&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
