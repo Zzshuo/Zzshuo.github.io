@@ -1,0 +1,1203 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/common/favicon.ico">
+  <link rel="icon" type="image/png" href="/images/common/favicon.ico">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#24292E">
+  <meta name="description" content="">
+  <meta name="author" content="zshuo">
+  <meta name="keywords" content="">
+  <title>Protocol Buffers Guide（Proto3） - zshuo</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+    
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_pf9vaxs7x7b.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 60vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>zshuo</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/images/general/1.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-03-07 00:00" pubdate>
+        2021年3月7日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      6.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      80
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">Protocol Buffers Guide（Proto3）</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <h2 id="历史"><a href="#历史" class="headerlink" title="历史"></a>历史</h2><p><a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/proto3">官方文档</a></p>
+<p>2001年初，Protobuf首先在Google内部创建， 我们把它称之为 <code>proto1</code>，一直以来在Google的内部使用，其中也不断的演化，根据使用者的需求也添加很多新的功能，一些内部库依赖它。几乎每个Google的开发者都会使用到它。</p>
+<p>Google开始开源它的内部项目时，因为依赖的关系，所以他们决定首先把Protobuf开源出去。 proto1在演化的过程中有些混乱，所以Protobuf的开发者重写了Protobuf的实现，保留了proto1的大部分设计，以及proto1的很多的想法。但是开源的proto2不依赖任何的Google的库，代码也相当的清晰。2008年7月7日，Protobuf开始公布出来。</p>
+<p>Protobuf公布出来也得到了大家的广泛的关注， 逐步地也得到了大家的认可，很多项目也采用Protobuf进行消息的通讯，还有基于Protobuf的微服务框架GRPC。在使用的过程中，大家也提出了很多的意见和建议，Protobuf也在演化，于2016年推出了Proto3。 Proto3简化了proto2的开发，提高了开发的效能，但是也带来了版本不兼容的问题。</p>
+<p>目前Protobuf的稳定版本是3.9.2，于2019年9月23日发布。由于很多公司很早的就采用了Protobuf，所以很多项目还在使用proto2协议，目前是proto2和proto3同时在使用的状态。</p>
+<p>Protocol Buffer名称来自于初期一个主要的类的名称<code>ProtocolBuffer</code>。</p>
+<p>Google当前并没有Protobuf的相关专利，所以不必担心侵权的问题。</p>
+<h2 id="What-are-protocol-buffers"><a href="#What-are-protocol-buffers" class="headerlink" title="What are protocol buffers?"></a>What are protocol buffers?</h2><p>Protocol buffers 是一种语言无关，平台无关，可扩展的序列化数据的格式。</p>
+<blockquote>
+<p>Protocol buffers are a language-neutral, platform-neutral extensible mechanism for serializing structured data.</p>
+</blockquote>
+<p><strong>protocol buffers 诞生之初是为了解决服务器端新旧协议(高低版本)兼容性问题，名字也很体贴，“协议缓冲区”。只不过后期慢慢发展成用于传输数据</strong>。</p>
+<h2 id="支持语言"><a href="#支持语言" class="headerlink" title="支持语言"></a>支持语言</h2><p>Java、Python、Objective-c、C++、C#、Go、Ruby、Dart、with more.</p>
+<h2 id="proto3-新特性"><a href="#proto3-新特性" class="headerlink" title="proto3 新特性"></a>proto3 新特性</h2><ul>
+<li>移除了原始值字段的出现逻辑。</li>
+<li>移除了<code>required</code>字段</li>
+<li>移除了缺省值</li>
+<li>移除了<code>unknown</code>字段 （3.5中又加上了）</li>
+<li>移除了扩展，使用<code>Any</code>代替</li>
+<li>修复了未知的枚举值的语义</li>
+<li>添加了map类型</li>
+<li>添加了一些标准类似，比如time、动态数据的呈现</li>
+<li>可以使用JSON编码代替二进制proto编码</li>
+</ul>
+<h2 id="消息类型"><a href="#消息类型" class="headerlink" title="消息类型"></a>消息类型</h2><p>使用<code>.proto</code>文件来定义消息类型</p>
+<div class="hljs"><pre><code class="hljs protobuf">syntax = <span class="hljs-string">&quot;proto3&quot;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchRequest</span> </span>&#123;
+  <span class="hljs-built_in">string</span> query = <span class="hljs-number">1</span>;
+  <span class="hljs-built_in">int32</span> page_number = <span class="hljs-number">2</span>;
+  <span class="hljs-built_in">int32</span> result_per_page = <span class="hljs-number">3</span>;
+&#125;</code></pre></div>
+
+<ul>
+<li>第一行是声明了使用<code>proto3</code>语法解析，必须在第一个非空、非注释行。如果不声明，则默认使用<code>proto2</code>语法解析</li>
+<li><code>SearchRequest</code>定义了3个字段，每个字段都有包含了名称、类型、编号</li>
+</ul>
+<h3 id="字段编号"><a href="#字段编号" class="headerlink" title="字段编号"></a>字段编号</h3><p>消息定义中的每个字段都有一个唯一编号。这些编号用于在消息二进制格式中标识字段，并且在消息类型被使用后不应该被更改。</p>
+<p>1 - 15 字段编号需要一个字节进行编码，包括字段编号和字段类型（具体原因见<a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/encoding#structure">Protocol Buffer Encoding</a> structure章节），16 - 2047 字段编号需要两个字节。所以应该保留数字 1 到 15 作为常用的消息元素。请记住可以为将来可能频繁出现的元素预留一些空间。</p>
+<p>字段编号为1-2^29^-1 或 536,870,911，19000-19999（FieldDescriptor :: kFirstReservedNumber 到 FieldDescriptor :: kLastReservedNumber）为保留字段不能使用，编译时会报错。</p>
+<h3 id="字段规则"><a href="#字段规则" class="headerlink" title="字段规则"></a>字段规则</h3><p>字段规则遵循以下之一</p>
+<ul>
+<li>singular:一个格式良好的消息可以有0个或其中一个字段(但不能超过一个)(proto3默认字段规则)</li>
+<li>repeated:可以重复多次，但是重复值的顺序会被保留（数组）</li>
+</ul>
+<p>在 proto3 中，纯数字类型的 repeated 字段编码时候默认采用 packed 编码（具体原因见<a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/encoding#packed">Protocol Buffer Encoding</a> packed章节）</p>
+<h3 id="多消息类型"><a href="#多消息类型" class="headerlink" title="多消息类型"></a>多消息类型</h3><p>多个消息类型可以定义在一个<code>.proto</code>文件里，如下所示，一个SearchRequest，一个SearchResponse。</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchRequest</span> </span>&#123;
+  <span class="hljs-built_in">string</span> query = <span class="hljs-number">1</span>;
+  <span class="hljs-built_in">int32</span> page_number = <span class="hljs-number">2</span>;
+  <span class="hljs-built_in">int32</span> result_per_page = <span class="hljs-number">3</span>;
+&#125;
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchResponse</span> </span>&#123;
+ ...
+&#125;</code></pre></div>
+
+<h3 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h3><p>使用 <code>//</code> 或者 <code>/* ... */</code> 语法添加备注</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-comment">/* SearchRequest represents a search query, with pagination options to</span>
+<span class="hljs-comment"> * indicate which results to include in the response. */</span>
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchRequest</span> </span>&#123;
+  <span class="hljs-built_in">string</span> query = <span class="hljs-number">1</span>;
+  <span class="hljs-built_in">int32</span> page_number = <span class="hljs-number">2</span>;  <span class="hljs-comment">// Which page number do we want?</span>
+  <span class="hljs-built_in">int32</span> result_per_page = <span class="hljs-number">3</span>;  <span class="hljs-comment">// Number of results to return per page.</span>
+&#125;</code></pre></div>
+
+<h3 id="reserved"><a href="#reserved" class="headerlink" title="reserved"></a><code>reserved</code></h3><p>保留字段、用来指明此message不使用某些字段，也就是忽略这些字段。</p>
+<p>如果删除或注释掉某个字段来更新消息类型，用户可能会在后面重新使用这个字段，如果加载到了旧版<code>.proto</code>文件，会导致出现数据混乱、序列化等问题。确保不会发生这种问题，使用<code>reserved</code>标识这些字段，如果后面使用了这些字段，编译时会报错。</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Foo</span> </span>&#123;
+  reserved <span class="hljs-number">2</span>, <span class="hljs-number">15</span>, <span class="hljs-number">9</span> to <span class="hljs-number">11</span>;
+  reserved <span class="hljs-string">&quot;foo&quot;</span>, <span class="hljs-string">&quot;bar&quot;</span>;
+&#125;</code></pre></div>
+
+<blockquote>
+<p>不能在同一个 <code>reserved</code> 语句中混合字段名称和字段编号，可以像上面这个例子这样分开写。</p>
+</blockquote>
+<h3 id="proto文件的生成"><a href="#proto文件的生成" class="headerlink" title=".proto文件的生成"></a><code>.proto</code>文件的生成</h3><p>编译器会根据你选择的的语言以及在<code>.proto</code>描述的消息类型生成对应的代码，包括get、set字段值，序列化消息到输出流，从输入流解析消息。</p>
+<ul>
+<li>Java：编译器生成一个.java文件，其中包含每个消息类型的类，以及用于创建消息类实例的特殊构建器类。</li>
+<li>C++：编译器从每个.proto中生成.h和.cc文件，并为文件中描述的每种消息类型生成一个类。</li>
+<li>…</li>
+</ul>
+<p>更多API详情参考 <a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/reference/overview">API reference</a> </p>
+<h2 id="字段类型"><a href="#字段类型" class="headerlink" title="字段类型"></a>字段类型</h2><h3 id="标量-基本-标准类型-Scalar-Value-Types"><a href="#标量-基本-标准类型-Scalar-Value-Types" class="headerlink" title="标量/基本/标准类型(Scalar Value Types)"></a>标量/基本/标准类型(Scalar Value Types)</h3><ul>
+<li>数字类型： double、float、int32、int64、uint32、uint64、sint32、sint64: 存储长度可变的浮点数、整数、无符号整数和有符号整数</li>
+<li>存储固定大小的数字类型：fixed32、fixed64、sfixed32、sfixed64: 存储空间固定</li>
+<li>布尔类型: bool</li>
+<li>字符串: string</li>
+<li>bytes: 字节数组</li>
+<li>enum:枚举类型</li>
+</ul>
+<h3 id="message-消息类型"><a href="#message-消息类型" class="headerlink" title="message: 消息类型"></a>message: 消息类型</h3><p>可以用相同的.proto定义一个结果消息类型，然后在SearchResponse中指定一个Result类型的字段:</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchResponse</span> </span>&#123;
+  <span class="hljs-keyword">repeated</span> Result results = <span class="hljs-number">1</span>;
+&#125;
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Result</span> </span>&#123;
+  <span class="hljs-built_in">string</span> url = <span class="hljs-number">1</span>;
+  <span class="hljs-built_in">string</span> title = <span class="hljs-number">2</span>;
+  <span class="hljs-keyword">repeated</span> <span class="hljs-built_in">string</span> snippets = <span class="hljs-number">3</span>;
+&#125;</code></pre></div>
+
+<ul>
+<li><p>你在 proto3 中可以引用 proto2 消息类型，反之亦可。</p>
+</li>
+<li><p>proto2 语法格式的枚举类型，不可以在 proto3 中引用。</p>
+</li>
+<li><p>可以通过导入其他.proto文件来使用它们的定义。<strong>注意，此特性在Java中不可用。</strong></p>
+</li>
+</ul>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;myproject/other_protos.proto&quot;</span>;</code></pre></div>
+
+<h3 id="默认值"><a href="#默认值" class="headerlink" title="默认值"></a>默认值</h3><ul>
+<li>字符串默认值为空字符串。</li>
+<li>字节类型默认值是空字节。</li>
+<li>布尔类型默认值为 false。</li>
+<li>数值类型默认值位 0。</li>
+<li>枚举 类型默认值是第一个枚举元素，它必须为 0。</li>
+<li>消息类型字段默认值为 null。</li>
+</ul>
+<blockquote>
+<p>对于标准数据类型的字段，当消息被解析的时候没有办法显示地设定默认值的。</p>
+<p>序列化时，如果标准类型的字段的值等于它的默认值，这个值是不会存储到介质上的。</p>
+</blockquote>
+<h3 id="标量类型映射表"><a href="#标量类型映射表" class="headerlink" title="标量类型映射表"></a>标量类型映射表</h3><table>
+<thead>
+<tr>
+<th align="left">.proto Type</th>
+<th align="left">Notes</th>
+<th align="left">C++ Type</th>
+<th align="left">Java Type</th>
+<th align="left">Python Type[2]</th>
+<th align="left">Go Type</th>
+<th align="left">C# Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">double</td>
+<td align="left"></td>
+<td align="left">double</td>
+<td align="left">double</td>
+<td align="left">float</td>
+<td align="left">float64</td>
+<td align="left">double</td>
+</tr>
+<tr>
+<td align="left">float</td>
+<td align="left"></td>
+<td align="left">float</td>
+<td align="left">float</td>
+<td align="left">float</td>
+<td align="left">float32</td>
+<td align="left">float</td>
+</tr>
+<tr>
+<td align="left">int32</td>
+<td align="left">Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+<td align="left">int32</td>
+<td align="left">int</td>
+<td align="left">int</td>
+<td align="left">int32</td>
+<td align="left">int</td>
+</tr>
+<tr>
+<td align="left">int64</td>
+<td align="left">Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+<td align="left">int64</td>
+<td align="left">long</td>
+<td align="left">int/long[3]</td>
+<td align="left">int64</td>
+<td align="left">long</td>
+</tr>
+<tr>
+<td align="left">uint32</td>
+<td align="left">Uses variable-length encoding.</td>
+<td align="left">uint32</td>
+<td align="left">int[1]</td>
+<td align="left">int/long[3]</td>
+<td align="left">uint32</td>
+<td align="left">uint</td>
+</tr>
+<tr>
+<td align="left">uint64</td>
+<td align="left">Uses variable-length encoding.</td>
+<td align="left">uint64</td>
+<td align="left">long[1]</td>
+<td align="left">int/long[3]</td>
+<td align="left">uint64</td>
+<td align="left">ulong</td>
+</tr>
+<tr>
+<td align="left">sint32</td>
+<td align="left">Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+<td align="left">int32</td>
+<td align="left">int</td>
+<td align="left">int</td>
+<td align="left">int32</td>
+<td align="left">int</td>
+</tr>
+<tr>
+<td align="left">sint64</td>
+<td align="left">Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+<td align="left">int64</td>
+<td align="left">long</td>
+<td align="left">int/long[3]</td>
+<td align="left">int64</td>
+<td align="left">long</td>
+</tr>
+<tr>
+<td align="left">fixed32</td>
+<td align="left">Always four bytes. More efficient than uint32 if values are often greater than 228.</td>
+<td align="left">uint32</td>
+<td align="left">int[1]</td>
+<td align="left">int/long[3]</td>
+<td align="left">uint32</td>
+<td align="left">uint</td>
+</tr>
+<tr>
+<td align="left">fixed64</td>
+<td align="left">Always eight bytes. More efficient than uint64 if values are often greater than 256.</td>
+<td align="left">uint64</td>
+<td align="left">long[1]</td>
+<td align="left">int/long[3]</td>
+<td align="left">uint64</td>
+<td align="left">ulong</td>
+</tr>
+<tr>
+<td align="left">sfixed32</td>
+<td align="left">Always four bytes.</td>
+<td align="left">int32</td>
+<td align="left">int</td>
+<td align="left">int</td>
+<td align="left">int32</td>
+<td align="left">int</td>
+</tr>
+<tr>
+<td align="left">sfixed64</td>
+<td align="left">Always eight bytes.</td>
+<td align="left">int64</td>
+<td align="left">long</td>
+<td align="left">int/long[3]</td>
+<td align="left">int64</td>
+<td align="left">long</td>
+</tr>
+<tr>
+<td align="left">bool</td>
+<td align="left"></td>
+<td align="left">bool</td>
+<td align="left">boolean</td>
+<td align="left">bool</td>
+<td align="left">bool</td>
+<td align="left">bool</td>
+</tr>
+<tr>
+<td align="left">string</td>
+<td align="left">A string must always contain UTF-8 encoded or 7-bit ASCII text, and cannot be longer than 232.</td>
+<td align="left">string</td>
+<td align="left">String</td>
+<td align="left">str/unicode[4]</td>
+<td align="left">string</td>
+<td align="left">string</td>
+</tr>
+<tr>
+<td align="left">bytes</td>
+<td align="left">May contain any arbitrary sequence of bytes no longer than 232.</td>
+<td align="left">string</td>
+<td align="left">ByteString</td>
+<td align="left">str</td>
+<td align="left">[]byte</td>
+<td align="left">ByteString</td>
+</tr>
+</tbody></table>
+<ul>
+<li>[1] 在 Java 中，无符号的 32 位和 64 位整数使用对应带符号的表示方法，最高位存储符号位。</li>
+<li>[2] 在所有情况下，给一个字段设置一个值的时候都会执行类型检查以确保其有效。</li>
+<li>[3] 64 位或无符号 32 位整数在解码时始终表示为 long，但是如果在设置字段的时候设置了 int，则可以为 int。 在所有情况下，该值都必须符合设置时表示的类型。参见[2]。</li>
+<li>[4] Python 字符串在解码时表示为 unicode，但如果给出了 ASCII 字符串，则可以为 str（此字符串可能会发生变化）。</li>
+<li>[5] 在 64 位计算机上使用 Integer，在 32 位计算机上使用 string。</li>
+</ul>
+<h2 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h2><div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchRequest</span> </span>&#123;
+  <span class="hljs-built_in">string</span> query = <span class="hljs-number">1</span>;
+  <span class="hljs-built_in">int32</span> page_number = <span class="hljs-number">2</span>;
+  <span class="hljs-built_in">int32</span> result_per_page = <span class="hljs-number">3</span>;
+  <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">Corpus</span> </span>&#123;
+    UNIVERSAL = <span class="hljs-number">0</span>;
+    WEB = <span class="hljs-number">1</span>;
+    IMAGES = <span class="hljs-number">2</span>;
+    LOCAL = <span class="hljs-number">3</span>;
+    NEWS = <span class="hljs-number">4</span>;
+    PRODUCTS = <span class="hljs-number">5</span>;
+    VIDEO = <span class="hljs-number">6</span>;
+  &#125;
+  Corpus corpus = <span class="hljs-number">4</span>;
+&#125;</code></pre></div>
+
+<ul>
+<li>第一个枚举值必须是0，而且必须定义。</li>
+<li>枚举的常量必须是一个32比特的整数，从效率的角度考虑，不推荐采用负数。</li>
+<li>可以在message中定义枚举，也可以在外部定义，类似于java枚举</li>
+</ul>
+<h3 id="别名"><a href="#别名" class="headerlink" title="别名"></a>别名</h3><p>可以把相同的值分配给不同的枚举常量来定义别名，需要设置<code>allow_alias = true</code></p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">MyMessage1</span> </span>&#123;
+  <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">EnumAllowingAlias</span> </span>&#123;
+    <span class="hljs-keyword">option</span> allow_alias = <span class="hljs-literal">true</span>;
+    UNKNOWN = <span class="hljs-number">0</span>;
+    STARTED = <span class="hljs-number">1</span>;
+    RUNNING = <span class="hljs-number">1</span>;
+  &#125;
+&#125;
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">MyMessage2</span> </span>&#123;
+  <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">EnumNotAllowingAlias</span> </span>&#123;
+    UNKNOWN = <span class="hljs-number">0</span>;
+    STARTED = <span class="hljs-number">1</span>;
+    <span class="hljs-comment">// RUNNING = 1;  // 取消注释会导致编译错误，因为没有设置允许别名</span>
+  &#125;
+&#125;</code></pre></div>
+
+<h3 id="枚举保留值"><a href="#枚举保留值" class="headerlink" title="枚举保留值"></a>枚举保留值</h3><p> <code>max</code> 指定保留数值范围上升到最大可能值。</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">Foo</span> </span>&#123;
+  reserved <span class="hljs-number">2</span>, <span class="hljs-number">15</span>, <span class="hljs-number">9</span> to <span class="hljs-number">11</span>, <span class="hljs-number">40</span> to max;
+  reserved <span class="hljs-string">&quot;FOO&quot;</span>, <span class="hljs-string">&quot;BAR&quot;</span>;
+&#125;</code></pre></div>
+
+<blockquote>
+<p>不能在同一个 <code>reserved</code> 语句中混合字段名称和字段编号，可以像上面这个例子这样分开写。</p>
+</blockquote>
+<h2 id="嵌套类型"><a href="#嵌套类型" class="headerlink" title="嵌套类型"></a>嵌套类型</h2><p>Protocol Buffers 定义 message 允许嵌套组合成更加复杂的消息。</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SearchResponse</span> </span>&#123;
+  <span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Result</span> </span>&#123;
+    <span class="hljs-built_in">string</span> url = <span class="hljs-number">1</span>;
+    <span class="hljs-built_in">string</span> title = <span class="hljs-number">2</span>;
+    <span class="hljs-keyword">repeated</span> <span class="hljs-built_in">string</span> snippets = <span class="hljs-number">3</span>;
+  &#125;
+  <span class="hljs-keyword">repeated</span> Result results = <span class="hljs-number">1</span>;
+&#125;</code></pre></div>
+
+<p>引用其他message中的消息</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SomeOtherMessage</span> </span>&#123;
+  SearchResponse.Result result = <span class="hljs-number">1</span>;
+&#125;</code></pre></div>
+
+<p>深度嵌套(你喜欢)</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Outer</span> </span>&#123;                  <span class="hljs-comment">// Level 0</span>
+  <span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">MiddleAA</span> </span>&#123;  <span class="hljs-comment">// Level 1</span>
+    <span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Inner</span> </span>&#123;   <span class="hljs-comment">// Level 2</span>
+      <span class="hljs-built_in">int64</span> ival = <span class="hljs-number">1</span>;
+      <span class="hljs-built_in">bool</span>  booly = <span class="hljs-number">2</span>;
+    &#125;
+  &#125;
+  <span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">MiddleBB</span> </span>&#123;  <span class="hljs-comment">// Level 1</span>
+    <span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Inner</span> </span>&#123;   <span class="hljs-comment">// Level 2</span>
+      <span class="hljs-built_in">int32</span> ival = <span class="hljs-number">1</span>;
+      <span class="hljs-built_in">bool</span>  booly = <span class="hljs-number">2</span>;
+    &#125;
+  &#125;
+&#125;</code></pre></div>
+
+<h2 id="更新消息类型"><a href="#更新消息类型" class="headerlink" title="更新消息类型"></a>更新消息类型</h2><p>有时候你不得不修改正在使用的proto文件，比如为类型增加一个字段，protobuf支持这种修改而不影响已有的服务，不过你需要遵循一定的规则：</p>
+<ol>
+<li>不要改动原有字段的数据结构（名称、类型、编号）。</li>
+<li>当增加一个新的字段的时候，老系统序列化后的数据依然可以被你的新的格式所解析，只不过你需要处理新加字段的缺省值。 老系统也能解析你信息的值，新加字段只不过被丢弃了</li>
+<li>字段也可以被移除，但是建议你Reserved这个字段，避免将来会使用这个字段</li>
+<li>int32，uint32，int64，uint64 和 bool 全都兼容。不匹配将被截断（例如，如果将 64 位数字读为 int32，它将被截断为 32 位）。</li>
+<li>sint32 和 sint64 相互兼容，但与其他整数类型不兼容。</li>
+<li>string 和 bytes兼容，如果 bytes 是合法的UTF-8 bytes。</li>
+<li>嵌入式message和bytes兼容，如果bytes包含一个message编码版本。</li>
+<li>fixed32与sfixed32兼容，fixed64与sfixed64兼容。</li>
+<li>enum 就数组而言，是可以与 int32，uint32，int64 和 uint64 兼容（不匹配将被截断）。但是请注意，当消息反序列化时，客户端代码可能会以不同的方式对待它们：例如，未识别的 proto3 枚举类型将保留在消息中，但消息反序列化时如何表示是与语言相关的。Int 域始终只保留它们的值。</li>
+<li>把单一一个值改变成一个新的oneof类型的一个成员是安全和二进制兼容的。把一组字段变成一个新的oneof字段也是安全的，如果你确保这一组字段最多只会设置一个。把一个字段移动到一个已存在的oneof字段是不安全的（注意字段和值的区别，字段是 field，值是 value）</li>
+</ol>
+<h2 id="未知字段"><a href="#未知字段" class="headerlink" title="未知字段"></a>未知字段</h2><p>未知类型是指数据的格式符合Protobuf的定义，但是数据中的某个/某些字段解析器无法识别的字段类型。一般发生在proto文件有变化，新旧数据不一致的情况导致。</p>
+<p>proto3最开始对于不能识别的数据就丢弃掉了，但是自3.5 版本后重新引入了未知字段，以匹配proto2的行为。</p>
+<h2 id="Any"><a href="#Any" class="headerlink" title="Any"></a>Any</h2><p>Any消息类型允许您将消息作为嵌入类型使用，而不需要它们的.proto定义</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;google/protobuf/any.proto&quot;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">ErrorStatus</span> </span>&#123;
+  <span class="hljs-built_in">string</span> <span class="hljs-class"><span class="hljs-keyword">message</span> = 1;</span>
+<span class="hljs-class">  <span class="hljs-title">repeated</span> google.protobuf.Any details = 2;</span>
+<span class="hljs-class">&#125;</span></code></pre></div>
+
+<p><code>google.protobuf.Any</code> 可以理解为Java中的Object，但又和Object有所不同。Any不是所有的Message的父类，而Object是所有类的父类。</p>
+<h2 id="Oneof"><a href="#Oneof" class="headerlink" title="Oneof"></a>Oneof</h2><p>如果你有一组字段，同时最多允许这一组中的一个字段出现，就可以使用<code>Oneof</code>定义这一组字段。</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">SampleMessage</span> </span>&#123;
+  <span class="hljs-keyword">oneof</span> test_oneof &#123;
+    <span class="hljs-built_in">string</span> name = <span class="hljs-number">4</span>;
+    SubMessage sub_message = <span class="hljs-number">9</span>;
+  &#125;
+&#125;</code></pre></div>
+
+<p>因为proto3没有办法区分正常的值是否是设置了还是取得缺省值(比如int64类型字段，如果它的值是0，你无法判断数据是否包含这个字段，因为0几可能是数据中设置的值，也可能是这个字段的零值)，所以你可以通过Oneof取得这个功能，因为Oneof有判断字段是否设置的功能。</p>
+<ul>
+<li><p>设置 oneof 组中某一个成员的值时，其它成员的值被自动清除。因此，当你的 oneof 组中有多个成员的时候，只有最有一个被赋值的字段拥有自己的值。</p>
+<div class="hljs"><pre><code class="hljs java">SampleMessage message;
+message.set_name(<span class="hljs-string">&quot;name&quot;</span>);
+CHECK(message.has_name());
+message.mutable_sub_message(); <span class="hljs-comment">// Will clear name field.</span>
+CHECK(!message.has_name());</code></pre></div>
+</li>
+<li><p>如果解析器发现多个 oneof 组的成员被存储在介质上，只有最后一个成员被解析到消息中。</p>
+</li>
+<li><p>oneof 字段不能是 repeated 可重复的（数组）。</p>
+</li>
+<li><p>oneof 字段可以使用反射函数。</p>
+</li>
+</ul>
+<h2 id="Map"><a href="#Map" class="headerlink" title="Map"></a>Map</h2><div class="hljs"><pre><code class="hljs cpp"><span class="hljs-built_in">map</span>&lt;key_type, value_type&gt; map_field = N;
+<span class="hljs-built_in">map</span>&lt;<span class="hljs-built_in">string</span>, Project&gt; projects = <span class="hljs-number">3</span>;</code></pre></div>
+
+<ul>
+<li><code>key_type</code> 可以是任何整形或者字符串类型(任何的标量类型，除了float、double 和 bytes)</li>
+<li>枚举值也不能作为 key。</li>
+<li><code>value_type</code> 可以是除去 map 以外的任何类型。</li>
+</ul>
+<h3 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h3><ul>
+<li>map 不能用 repeated 修饰。</li>
+<li>map 是无序的。</li>
+<li>为 <code>.proto</code> 生成文本格式时，map 按 key 排序。数字的 key 按数字排序。</li>
+<li>数组解析或合并成map时，如果有重复的 key，则使用所看到的最后一个 key（覆盖原则）。从文本格式解析映射时，如果有重复的 key，解析可能会失败。</li>
+</ul>
+<p>Protocol Buffer 虽然不支持 map 类型的数组，但是可以转换一下，用以下思路实现 maps 数组：</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">MapFieldEntry</span> </span>&#123;
+  key_type key = <span class="hljs-number">1</span>;
+  value_type value = <span class="hljs-number">2</span>;
+&#125;
+
+<span class="hljs-keyword">repeated</span> MapFieldEntry map_field = N;</code></pre></div>
+
+<p>上述写法和 map 数组是完全等价的，所以用 repeated 巧妙的实现了 maps 数组的需求。</p>
+<h2 id="Package"><a href="#Package" class="headerlink" title="Package"></a>Package</h2><p>定义proto的包名，包名可以避免对message 类型之间的名字冲突，同名的Message可以通过package进行区分。</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">package</span> foo.bar;
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Open</span> </span>&#123; ... &#125;</code></pre></div>
+
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">Foo</span> </span>&#123;
+  ...
+  foo.bar.Open open = <span class="hljs-number">1</span>;
+  ...
+&#125;</code></pre></div>
+
+<p>在没有为特定语言定义<code>option xxx_package</code>的时候，它还可以用来生成特定语言的包名:</p>
+<ul>
+<li>在c++中，生成的类被包装在c++命名空间中。例如，Open应该在命名空间foo::bar中。</li>
+<li>在Java中，包被用作Java包，除非您在.proto文件中显式地提供了一个java_package选项。</li>
+<li>在Python中，package指令会被忽略，因为Python模块是根据它们在文件系统中的位置来组织的。</li>
+</ul>
+<h2 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h2><p>如果想在 RPC（远程过程调用）系统中使用自定义的消息类型，你可以在.proto 文件中定义一个 RPC 服务，protocol buffer  编译器就会根据你选择的编程语言生成服务器接口和存根代码。例如，定义一个 RPC 服务，根据 <code>SearchRequest</code> 返回<code>SearchResponse</code>：</p>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-class"><span class="hljs-keyword">service</span> <span class="hljs-title">SearchService</span> </span>&#123;
+  <span class="hljs-function"><span class="hljs-keyword">rpc</span> Search(SearchRequest) <span class="hljs-keyword">returns</span> (SearchResponse)</span>;
+&#125;</code></pre></div>
+
+<p>与protocol buffer  一起使用的最直接的RPC系统是gRPC，它允许你使用一个特殊的协议缓冲区编译器插件，直接从你的.proto文件中生成相关的RPC代码。</p>
+<h2 id="命名规范"><a href="#命名规范" class="headerlink" title="命名规范"></a>命名规范</h2><h3 id="字段名"><a href="#字段名" class="headerlink" title="字段名"></a>字段名</h3><p>首字母必须是字母类型，然后可以是字母、数字或者下划线_。</p>
+<h3 id="message"><a href="#message" class="headerlink" title="message"></a>message</h3><p>采用驼峰命名法。message 首字母大写开头。字段名采用下划线分隔法命名。</p>
+<div class="hljs"><pre><code class="hljs proto">message SongServerRequest &#123;
+  required string song_name &#x3D; 1;
+&#125;</code></pre></div>
+
+<h3 id="枚举-1"><a href="#枚举-1" class="headerlink" title="枚举"></a>枚举</h3><p>采用驼峰命名法。枚举类型首字母大写开头。每个枚举值全部大写，并且采用下划线分隔法命名。</p>
+<div class="hljs"><pre><code class="hljs proto">enum Foo &#123;
+  FIRST_VALUE &#x3D; 0;
+  SECOND_VALUE &#x3D; 1;
+&#125;</code></pre></div>
+
+<p><strong>每个枚举值用分号结束，不是逗号</strong>。</p>
+<h3 id="服务名和方法名"><a href="#服务名和方法名" class="headerlink" title="服务名和方法名"></a>服务名和方法名</h3><p>驼峰命名法，并且首字母都大写开头。</p>
+<div class="hljs"><pre><code class="hljs proto">service FooService &#123;
+  rpc GetSomething(FooRequest) returns (FooResponse);
+&#125;</code></pre></div>
+
+<h2 id="JSON-Mapping"><a href="#JSON-Mapping" class="headerlink" title="JSON Mapping"></a>JSON Mapping</h2><p>Proto3支持JSON格式的规范编码，使得在系统之间共享数据变得更加容易。</p>
+<p>如果 JSON 编码数据中缺少值或其值为空，则在解析为 protocol buffer 时，它将被解释为适当的默认值。</p>
+<p>如果一个字段在protocol buffer 中具有默认值，默认情况下它将在 JSON 编码数据中省略以节省空间</p>
+<table>
+<thead>
+<tr>
+<th align="left">proto3</th>
+<th align="left">JSON</th>
+<th align="left">JSON example</th>
+<th align="left">Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">message</td>
+<td align="left">object</td>
+<td align="left"><code>&#123;&quot;fooBar&quot;: v, &quot;g&quot;: null, …&#125;</code></td>
+<td align="left">Generates JSON objects. Message field names are mapped to lowerCamelCase and become JSON object keys. If the <code>json_name</code> field option is specified, the specified value will be used as the key instead. Parsers accept both the lowerCamelCase name (or the one specified by the <code>json_name</code> option) and the original proto field name. <code>null</code> is an accepted value for all field types and treated as the default value of the corresponding field type.</td>
+</tr>
+<tr>
+<td align="left">enum</td>
+<td align="left">string</td>
+<td align="left"><code>&quot;FOO_BAR&quot;</code></td>
+<td align="left">The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values.</td>
+</tr>
+<tr>
+<td align="left">map&lt;K,V&gt;</td>
+<td align="left">object</td>
+<td align="left"><code>&#123;&quot;k&quot;: v, …&#125;</code></td>
+<td align="left">All keys are converted to strings.</td>
+</tr>
+<tr>
+<td align="left">repeated V</td>
+<td align="left">array</td>
+<td align="left"><code>[v, …]</code></td>
+<td align="left"><code>null</code> is accepted as the empty list <code>[]</code>.</td>
+</tr>
+<tr>
+<td align="left">bool</td>
+<td align="left">true, false</td>
+<td align="left"><code>true, false</code></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">string</td>
+<td align="left">string</td>
+<td align="left"><code>&quot;Hello World!&quot;</code></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">bytes</td>
+<td align="left">base64 string</td>
+<td align="left"><code>&quot;YWJjMTIzIT8kKiYoKSctPUB+&quot;</code></td>
+<td align="left">JSON value will be the data encoded as a string using standard base64 encoding with paddings. Either standard or URL-safe base64 encoding with/without paddings are accepted.</td>
+</tr>
+<tr>
+<td align="left">int32, fixed32, uint32</td>
+<td align="left">number</td>
+<td align="left"><code>1, -10, 0</code></td>
+<td align="left">JSON value will be a decimal number. Either numbers or strings are accepted.</td>
+</tr>
+<tr>
+<td align="left">int64, fixed64, uint64</td>
+<td align="left">string</td>
+<td align="left"><code>&quot;1&quot;, &quot;-10&quot;</code></td>
+<td align="left">JSON value will be a decimal string. Either numbers or strings are accepted.</td>
+</tr>
+<tr>
+<td align="left">float, double</td>
+<td align="left">number</td>
+<td align="left"><code>1.1, -10.0, 0, &quot;NaN&quot;, &quot;Infinity&quot;</code></td>
+<td align="left">JSON value will be a number or one of the special string values “NaN”, “Infinity”, and “-Infinity”. Either numbers or strings are accepted. Exponent notation is also accepted. -0 is considered equivalent to 0.</td>
+</tr>
+<tr>
+<td align="left">Any</td>
+<td align="left"><code>object</code></td>
+<td align="left"><code>&#123;&quot;@type&quot;: &quot;url&quot;, &quot;f&quot;: v, … &#125;</code></td>
+<td align="left">If the Any contains a value that has a special JSON mapping, it will be converted as follows: <code>&#123;&quot;@type&quot;: xxx, &quot;value&quot;: yyy&#125;</code>. Otherwise, the value will be converted into a JSON object, and the <code>&quot;@type&quot;</code> field will be inserted to indicate the actual data type.</td>
+</tr>
+<tr>
+<td align="left">Timestamp</td>
+<td align="left">string</td>
+<td align="left"><code>&quot;1972-01-01T10:00:20.021Z&quot;</code></td>
+<td align="left">Uses RFC 3339, where generated output will always be Z-normalized and uses 0, 3, 6 or 9 fractional digits. Offsets other than “Z” are also accepted.</td>
+</tr>
+<tr>
+<td align="left">Duration</td>
+<td align="left">string</td>
+<td align="left"><code>&quot;1.000340012s&quot;, &quot;1s&quot;</code></td>
+<td align="left">Generated output always contains 0, 3, 6, or 9 fractional digits, depending on required precision, followed by the suffix “s”. Accepted are any fractional digits (also none) as long as they fit into nano-seconds precision and the suffix “s” is required.</td>
+</tr>
+<tr>
+<td align="left">Struct</td>
+<td align="left"><code>object</code></td>
+<td align="left"><code>&#123; … &#125;</code></td>
+<td align="left">Any JSON object. See <code>struct.proto</code>.</td>
+</tr>
+<tr>
+<td align="left">Wrapper types</td>
+<td align="left">various types</td>
+<td align="left"><code>2, &quot;2&quot;, &quot;foo&quot;, true, &quot;true&quot;, null, 0, …</code></td>
+<td align="left">Wrappers use the same representation in JSON as the wrapped primitive type, except that <code>null</code> is allowed and preserved during data conversion and transfer.</td>
+</tr>
+<tr>
+<td align="left">FieldMask</td>
+<td align="left">string</td>
+<td align="left"><code>&quot;f.fooBar,h&quot;</code></td>
+<td align="left">See <code>field_mask.proto</code>.</td>
+</tr>
+<tr>
+<td align="left">ListValue</td>
+<td align="left">array</td>
+<td align="left"><code>[foo, bar, …]</code></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">Value</td>
+<td align="left">value</td>
+<td align="left"></td>
+<td align="left">Any JSON value. Check <a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Value">google.protobuf.Value</a> for details.</td>
+</tr>
+<tr>
+<td align="left">NullValue</td>
+<td align="left">null</td>
+<td align="left"></td>
+<td align="left">JSON null</td>
+</tr>
+<tr>
+<td align="left">Empty</td>
+<td align="left">object</td>
+<td align="left"><code>&#123;&#125;</code></td>
+<td align="left">An empty JSON object</td>
+</tr>
+</tbody></table>
+<h3 id="JSON-options"><a href="#JSON-options" class="headerlink" title="JSON options"></a>JSON options</h3><ul>
+<li><strong>Emit fields with default values</strong>:  proto3 解析为JSON 时不省略有默认值</li>
+<li><strong>Ignore unknown fields</strong>:   proto3 解析为JSON 时忽略未知字段</li>
+<li><strong>Use proto field name instead of lowerCamelCase name</strong>: 使用proto字段名代替lowerCamelCase. </li>
+<li><strong>Emit enum values as integers instead of strings</strong>: 使用枚举值的数值代替枚举名称。</li>
+</ul>
+<h2 id="Options"><a href="#Options" class="headerlink" title="Options"></a>Options</h2><p>常用选项 ：</p>
+<ul>
+<li>java_package (文件级选项):声明生成的 Java 类拥有的包名。 如果没有在.proto 文件中显示地声明 java_package 选项，默认采用 proto 的包名（在.proto 文件中用 package 关键字定义）作为生成的 Java 类的包名。 </li>
+</ul>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">option</span> java_package = <span class="hljs-string">&quot;com.example.foo&quot;</span>;</code></pre></div>
+
+<ul>
+<li>java_outer_classname (文件级选项):编译生成的 Java 输出类的最外层类名（也是文件名）。 如果没有在.proto文件中定义 java_outer_classname 选项，默认将.proto 文件名转换为驼峰格式的文件名（例如 foo_bar.proto 编译生成 FooBar.java） 。</li>
+</ul>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">option</span> java_outer_classname = <span class="hljs-string">&quot;Ponycopter&quot;</span>;</code></pre></div>
+
+<ul>
+<li>java_multiple_files(文件选项):如果为false，则只会为这个.proto文件生成一个. Java文件，以及所有的Java类/enum /等等。如果为true，将为每个Java类/枚举/等生成单独的. Java文件。这是一个布尔选项，默认为false。</li>
+</ul>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">option</span> java_multiple_files = <span class="hljs-literal">true</span>;</code></pre></div>
+
+<ul>
+<li>optimize_for (文件级选项): <ul>
+<li>SPEED — 默认值： protoc 编译器会根据你定义的消息类型生成序列化、解析和执行其它常规操作的代码。这些代码是高度优化了的。</li>
+<li>CODE_SIZE:protoc 编译器会采用共享、反射技术来实现序列化、解析和其它操作的代码，以生成最小的类。 因此，所生成的代码比采用选项 SPEED 的要小得多，但是操作性能降低了。类的公共成员函数依然是一样的（用 SPEED 优化选项也是如此）。 这种模式是最有用的应用情况是：程序包含很多.proto 文件，但并不追求所有模块都有极快的速度。</li>
+<li>LITE_RUNTIME:protoc 编译器生成的类，仅依赖”lite”运行时库 (libprotobuf-lite而不是 libprotobuf)。”lite”比完整库 小得多，但省略了某些功能，如描述符和反射。这对于运行在像手机这样的有空间限制的平台上的应用程序特别有用。 protoc 编译器仍将为所有方法生成最快速的代码，这和在 SPEED 模式一样。生成的类将为每一种语言实现 MessageLite版本的接口，只提供了完整的 Message 接口的一个子集的实现。</li>
+</ul>
+</li>
+</ul>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-keyword">option</span> optimize_for = CODE_SIZE;</code></pre></div>
+
+<ul>
+<li><p>cc_enable_arenas(文件级选项): 为生成的 C++代码 启用 arena 内存管理功能。（译注：Arena Allocation，是一种 GC 优化技术，它可以有效地减少因内存碎片导致的 Full GC，从而提高系统的整体性能。）</p>
+</li>
+<li><p>objc_class_prefix(文件级选项):设置编译器从.proto 文件生成Objective-C的类和枚举类型的前缀 。没有默认值。Apple 的建议使用 3–5 个大写字母作为前缀。 请注意：所有的 2 个字母的前缀由苹果公司保留使用。</p>
+</li>
+<li><p>deprecated (字段选项): 这个选项如果设置为 true ，表示该字段已被废弃，你不应该在后续的代码中使用它。 在大多数语言中这没有任何实际的影响。在 Java 中，它会变@Deprecated 注释。</p>
+</li>
+</ul>
+<div class="hljs"><pre><code class="hljs protobuf"><span class="hljs-built_in">int32</span> old_field = <span class="hljs-number">6</span> [deprecated=<span class="hljs-literal">true</span>];</code></pre></div>
+
+<h2 id="Generating-Classes"><a href="#Generating-Classes" class="headerlink" title="Generating Classes"></a>Generating Classes</h2><div class="hljs"><pre><code class="hljs shell">protoc --proto_path=IMPORT_PATH --cpp_out=DST_DIR --java_out=DST_DIR --python_out=DST_DIR path/to/file.proto
+
+protoc --proto_path=src --java_out=build/gen src/foo.proto</code></pre></div>
+
+<p>IMPORT_PATH 指在.proto 文件中解析 import 指令时的查找目录路径。如果省略，则使用当前目录。通过多次传递参数–proto_path，可以实现在多个导入目录中按顺序查找。缩写<code>-I=IMPORT_PATH </code></p>
+<ul>
+<li><p><code>--cpp_out</code> generates C++ code in <code>DST_DIR</code>. See the <a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/reference/cpp-generated">C++ generated code reference</a> for more.</p>
+</li>
+<li><p><code>--java_out</code> generates Java code in <code>DST_DIR</code>. See the <a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/reference/java-generated">Java generated code reference</a> for more.</p>
+</li>
+<li><p><code>--python_out</code> generates Python code in <code>DST_DIR</code>. See the <a target="_blank" rel="noopener" href="https://developers.google.com/protocol-buffers/docs/reference/python-generated">Python generated code reference</a> for more.</p>
+</li>
+</ul>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><ol>
+<li>Protocol Buffer 利用 varint 原理压缩数据以后，二进制数据非常紧凑，option 也算是压缩体积的一个举措。所以 Protocol Buffer体积更小，如果选用它作为网络数据传输，势必相同数据，消耗的网络流量更少。但是并没有压缩到极限，float、double 浮点型都没有压缩。</li>
+<li>Protocol Buffer 比 JSON 和 XML 少了 {、}、: 这些符号，体积也减少一些。再加上 varint 压缩，gzip 压缩以后体积更小！</li>
+<li>Protocol Buffer 是 Tag - Value (Tag - Length - Value)的编码方式的实现，减少了分隔符的使用，数据存储更加紧凑。</li>
+<li>Protocol Buffer 另外一个核心价值在于提供了一套工具，一个编译工具，自动化生成 get/set 代码。简化了多语言交互的复杂度，使得编码解码工作有了生产力。</li>
+<li>Protocol Buffer 不是自我描述的，离开了数据描述 <code>.proto</code> 文件，就无法理解二进制数据流。这点即是优点，使数据具有一定的“加密性”，也是缺点，数据可读性极差。所以 Protocol Buffer 非常适合内部服务之间 RPC 调用和传递数据。</li>
+<li>Protocol Buffer 具有向后兼容的特性，更新数据结构以后，老版本依旧可以兼容，这也是 Protocol Buffer 诞生之初被寄予解决的问题。因为编译器对不识别的新增字段会跳过不处理。</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/protobuf/">protobuf</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/protobuf/">protobuf</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/03/08/protocol-buffer-encoding/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Protocol Buffer 编码</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/03/03/mac-jndi-embed-tomcat-derby/">
+                        <span class="hidden-mobile">Mac安装derby及Tomact JNDI引入数据源</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Protocol Buffers Guide（Proto3）&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
